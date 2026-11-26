@@ -309,19 +309,19 @@ export const ProjectShowcasePage: React.FC = () => {
       {/* FIND YOUR TEAM VIEW */}
       {activeTab === 'find-team' && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-3xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="bg-gradient-to-r from-[#45B5A7] to-[#2E988B] text-white p-6 rounded-3xl shadow-card flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-300">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-brand-amberLight">
                 Hackathons & Research Capstones
               </span>
               <h2 className="text-xl font-extrabold mt-1">Hackathon Teammate Matching</h2>
-              <p className="text-xs text-blue-100 mt-1 max-w-xl leading-relaxed">
+              <p className="text-xs text-teal-50 mt-1 max-w-xl leading-relaxed">
                 Need a frontend developer, AI researcher, or IoT engineer for Smart India Hackathon (SIH 2026)? Browse campus team listings or create your own.
               </p>
             </div>
             <button
               onClick={() => setIsRecruitModalOpen(true)}
-              className="px-5 py-2.5 bg-white hover:bg-slate-50 text-indigo-900 font-bold text-xs rounded-xl shadow-xs transition-colors whitespace-nowrap"
+              className="px-5 py-2.5 bg-white hover:bg-brand-amberLight text-brand-dark font-bold text-xs rounded-xl shadow-xs transition-colors whitespace-nowrap"
             >
               Post Team Opening
             </button>

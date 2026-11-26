@@ -48,7 +48,7 @@ export const StudentProfilePage: React.FC = () => {
       {/* Profile Header Card */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden">
         {/* Banner Graphic */}
-        <div className="h-32 bg-gradient-to-r from-blue-700 via-indigo-600 to-cyan-600 relative">
+        <div className="h-32 bg-gradient-to-r from-[#45B5A7] via-[#3AA89B] to-[#2E988B] relative">
           <div className="absolute top-4 right-4 flex gap-2">
             {!isEditing ? (
               <button

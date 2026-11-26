@@ -28,13 +28,13 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOp
   const getIcon = (type: string) => {
     switch (type) {
       case 'doubt_answer':
-        return <HelpCircle className="w-4 h-4 text-brand-blue" />;
+        return <HelpCircle className="w-4 h-4 text-brand-teal" />;
       case 'resource_verified':
         return <Award className="w-4 h-4 text-emerald-600" />;
       case 'team_application':
-        return <Users className="w-4 h-4 text-indigo-600" />;
+        return <Users className="w-4 h-4 text-brand-coral" />;
       case 'event':
-        return <Calendar className="w-4 h-4 text-amber-600" />;
+        return <Calendar className="w-4 h-4 text-amber-500" />;
       default:
         return <Sparkles className="w-4 h-4 text-brand-purple" />;
     }
@@ -85,7 +85,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOp
                 onClose();
               }}
               className={`p-3.5 flex items-start gap-3 hover:bg-slate-50 cursor-pointer transition-colors ${
-                !notif.isRead ? 'bg-blue-50/30' : ''
+                !notif.isRead ? 'bg-brand-tealLight/40' : ''
               }`}
             >
               <div className="p-2 rounded-xl bg-white border border-slate-200/80 shadow-xs flex-shrink-0">

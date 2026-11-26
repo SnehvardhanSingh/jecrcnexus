@@ -21,7 +21,7 @@ export const ToastContainer: React.FC = () => {
           success: 'bg-white border-emerald-200 text-slate-800 shadow-lg shadow-emerald-500/10',
           error: 'bg-white border-rose-200 text-slate-800 shadow-lg shadow-rose-500/10',
           warning: 'bg-white border-amber-200 text-slate-800 shadow-lg shadow-amber-500/10',
-          info: 'bg-white border-blue-200 text-slate-800 shadow-lg shadow-blue-500/10',
+          info: 'bg-white border-brand-teal/30 text-slate-800 shadow-lg shadow-teal-500/10',
         };
 
         return (

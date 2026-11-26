@@ -8,7 +8,9 @@ import {
   StudyGroup, 
   InterviewExperience, 
   CareerOpportunity,
-  NotificationItem
+  NotificationItem,
+  Branch,
+  Semester
 } from '../types';
 
 export const CURRENT_USER: UserProfile = {
@@ -1402,3 +1404,259 @@ export const PYQ_TOPIC_TRENDS: Record<string, { topic: string; frequencyPercent:
     { topic: 'CPU Scheduling Gantt Charts (FCFS, SJF, Round Robin)', frequencyPercent: 90, trend: 'critical' }
   ]
 };
+
+export interface CourseSubjectItem {
+  id: string;
+  code: string;
+  title: string;
+  branch: Branch;
+  semester: Semester;
+  credits: number;
+  facultyLead: string;
+  progressPercent: number;
+  resourcesCount: number;
+  accentColor: 'amber' | 'coral' | 'teal' | 'violet';
+  modules: string[];
+  nextTopic: string;
+}
+
+export const MOCK_COURSES: CourseSubjectItem[] = [
+  {
+    id: 'crs_01',
+    code: 'BCS-501',
+    title: 'Design & Analysis of Algorithms',
+    branch: 'Computer Science & Engineering',
+    semester: 5,
+    credits: 4,
+    facultyLead: 'Dr. Rajesh Sharma',
+    progressPercent: 78,
+    resourcesCount: 34,
+    accentColor: 'teal',
+    modules: ['Asymptotic Analysis', 'Divide & Conquer', 'Dynamic Programming', 'Greedy & Graph Algorithms'],
+    nextTopic: 'All-Pairs Shortest Path (Floyd-Warshall)'
+  },
+  {
+    id: 'crs_02',
+    code: 'BCS-502',
+    title: 'Operating Systems & Architecture',
+    branch: 'Computer Science & Engineering',
+    semester: 5,
+    credits: 4,
+    facultyLead: 'Prof. Anjali Verma',
+    progressPercent: 64,
+    resourcesCount: 28,
+    accentColor: 'coral',
+    modules: ['Process Synchronization', 'CPU Scheduling', 'Deadlocks & Banker\'s Algo', 'Virtual Memory & Paging'],
+    nextTopic: 'Page Replacement Policies (LRU & Optimal)'
+  },
+  {
+    id: 'crs_03',
+    code: 'BCS-503',
+    title: 'Database Management Systems',
+    branch: 'Computer Science & Engineering',
+    semester: 5,
+    credits: 3,
+    facultyLead: 'Prof. Neha Kulkarni',
+    progressPercent: 85,
+    resourcesCount: 41,
+    accentColor: 'amber',
+    modules: ['ER Modeling & Relational Algebra', 'SQL Queries & Joins', 'Normalization (BCNF/3NF)', 'Transactions & Concurrency'],
+    nextTopic: 'Two-Phase Locking & Serializability'
+  },
+  {
+    id: 'crs_04',
+    code: 'BAI-504',
+    title: 'Artificial Intelligence & Machine Learning',
+    branch: 'AI & Data Science',
+    semester: 5,
+    credits: 4,
+    facultyLead: 'Dr. Vikramaditya Joshi',
+    progressPercent: 52,
+    resourcesCount: 22,
+    accentColor: 'violet',
+    modules: ['Heuristic Search & A*', 'Regression & Classification', 'Decision Trees & SVM', 'Neural Networks Basics'],
+    nextTopic: 'Backpropagation & Gradient Descent'
+  },
+  {
+    id: 'crs_05',
+    code: 'BCS-301',
+    title: 'Data Structures and Algorithms',
+    branch: 'Computer Science & Engineering',
+    semester: 3,
+    credits: 4,
+    facultyLead: 'Dr. Rajesh Sharma',
+    progressPercent: 92,
+    resourcesCount: 48,
+    accentColor: 'teal',
+    modules: ['Arrays & Linked Lists', 'Stacks, Queues & Trees', 'Graphs & Traversals', 'Sorting & Hashing'],
+    nextTopic: 'AVL Tree Rotations Practice'
+  },
+  {
+    id: 'crs_06',
+    code: 'BMA-101',
+    title: 'Engineering Mathematics & Linear Algebra',
+    branch: 'Computer Science & Engineering',
+    semester: 1,
+    credits: 4,
+    facultyLead: 'Dr. S. K. Gupta',
+    progressPercent: 100,
+    resourcesCount: 52,
+    accentColor: 'amber',
+    modules: ['Matrices & Eigenvalues', 'Multivariable Calculus', 'Differential Equations', 'Probability & Statistics'],
+    nextTopic: 'Completed • Revision Ready'
+  }
+];
+
+export interface FacultyMentorProfile {
+  id: string;
+  name: string;
+  role: 'Faculty Advisor' | 'Senior Peer Mentor' | 'Industry Alumni Mentor';
+  department: string;
+  specialization: string;
+  avatar: string;
+  availability: string;
+  officeOrChannel: string;
+  rating: number;
+  guidanceCount: number;
+  topics: string[];
+  bio: string;
+}
+
+export const MOCK_FACULTY_MENTORS: FacultyMentorProfile[] = [
+  {
+    id: 'mnt_01',
+    name: 'Dr. S. K. Gupta',
+    role: 'Faculty Advisor',
+    department: 'Dept. of Mathematics',
+    specialization: 'Applied Math & Competitive Exam Prep',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=250&q=80',
+    availability: 'Mon, Wed • 3:00 PM - 5:00 PM',
+    officeOrChannel: 'Academic Block A, Room 204',
+    rating: 4.9,
+    guidanceCount: 310,
+    topics: ['Engineering Maths I & II', 'Linear Algebra', 'GATE Quantitative Prep'],
+    bio: 'Associate Professor with 14+ years mentoring JECRC University undergraduates in applied mathematics and analytical reasoning.'
+  },
+  {
+    id: 'mnt_02',
+    name: 'Prof. Anjali Verma',
+    role: 'Faculty Advisor',
+    department: 'Dept. of CSE & AI',
+    specialization: 'Operating Systems & Systems Research',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=250&q=80',
+    availability: 'Tue, Thu • 2:30 PM - 4:30 PM',
+    officeOrChannel: 'Engineering Block C, Lab 302',
+    rating: 4.9,
+    guidanceCount: 245,
+    topics: ['Operating Systems', 'Computer Architecture', 'Capstone Project Reviews'],
+    bio: 'Faculty coordinator for ACM Student Chapter and SIH mentorship panels at JECRC University.'
+  },
+  {
+    id: 'mnt_03',
+    name: 'Harshvardhan Singh',
+    role: 'Senior Peer Mentor',
+    department: '7th Sem • B.Tech CSE',
+    specialization: 'DSA, Competitive Coding & Placements',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80',
+    availability: 'Daily • 7:00 PM - 9:00 PM (Online)',
+    officeOrChannel: 'Nexus Study Room #DSA-101',
+    rating: 4.9,
+    guidanceCount: 94,
+    topics: ['DSA Interview Prep', 'System Design Basics', 'FAANG OA Strategies'],
+    bio: 'Incoming Amazon SDE Intern and LeetCode Knight (2040). Guiding 3rd & 5th semester students for coding rounds.'
+  },
+  {
+    id: 'mnt_04',
+    name: 'Priya Patel',
+    role: 'Senior Peer Mentor',
+    department: '5th Sem • AI & Data Science',
+    specialization: 'Machine Learning & Hackathon Prototyping',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80',
+    availability: 'Wed, Sat • 5:00 PM - 7:00 PM',
+    officeOrChannel: 'Innovation Lab / Online',
+    rating: 5.0,
+    guidanceCount: 68,
+    topics: ['PyTorch & Computer Vision', 'FastAPI Deployment', 'SIH Pitch Decks'],
+    bio: 'Smart India Hackathon Finalist helping teams convert academic ideas into working AI prototypes.'
+  },
+  {
+    id: 'mnt_05',
+    name: 'Dr. Rajesh Sharma',
+    role: 'Faculty Advisor',
+    department: 'Dept. of Computer Science',
+    specialization: 'Algorithms & Graph Theory',
+    avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=250&q=80',
+    availability: 'Fri • 11:00 AM - 1:00 PM',
+    officeOrChannel: 'Academic Block B, Cabin 108',
+    rating: 4.8,
+    guidanceCount: 280,
+    topics: ['Design & Analysis of Algorithms', 'Research Publications', 'Code Optimization'],
+    bio: 'Professor of Computer Science specializing in algorithmic complexity, competitive programming, and IEEE student research.'
+  }
+];
+
+export interface AssignmentTask {
+  id: string;
+  title: string;
+  subject: string;
+  dueDate: string;
+  status: 'Completed' | 'In Progress' | 'Due Soon';
+  progress: number;
+  type: 'Lab File' | 'Assignment' | 'Quiz' | 'Project';
+}
+
+export const MOCK_ASSIGNMENTS: AssignmentTask[] = [
+  {
+    id: 'asg_01',
+    title: 'Banker\'s Algorithm & Deadlock Avoidance Simulation',
+    subject: 'Operating Systems',
+    dueDate: 'Nov 28, 2026',
+    status: 'Due Soon',
+    progress: 65,
+    type: 'Lab File'
+  },
+  {
+    id: 'asg_02',
+    title: 'Dynamic Programming — Knapsack & LCS Problem Set',
+    subject: 'Design & Analysis of Algorithms',
+    dueDate: 'Nov 30, 2026',
+    status: 'In Progress',
+    progress: 40,
+    type: 'Assignment'
+  },
+  {
+    id: 'asg_03',
+    title: 'BCNF Normalization & SQL Triggers Schema Report',
+    subject: 'Database Management Systems',
+    dueDate: 'Dec 03, 2026',
+    status: 'In Progress',
+    progress: 80,
+    type: 'Project'
+  },
+  {
+    id: 'asg_04',
+    title: 'Binary Search Trees & AVL Traversal Implementation',
+    subject: 'Data Structures and Algorithms',
+    dueDate: 'Nov 20, 2026',
+    status: 'Completed',
+    progress: 100,
+    type: 'Lab File'
+  },
+  {
+    id: 'asg_05',
+    title: 'Mid-Term Revision Mock Quiz (Unit 1-3)',
+    subject: 'Artificial Intelligence & ML',
+    dueDate: 'Nov 18, 2026',
+    status: 'Completed',
+    progress: 100,
+    type: 'Quiz'
+  }
+];
+
+export const MONTHLY_ACTIVITY_SERIES = [
+  { label: 'Aug', value: 28, hours: 18 },
+  { label: 'Sep', value: 46, hours: 26 },
+  { label: 'Oct', value: 38, hours: 22 },
+  { label: 'Nov', value: 74, hours: 39 },
+  { label: 'Dec', value: 88, hours: 45 }
+];

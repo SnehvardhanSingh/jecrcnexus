@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { AcademicResource, Branch, ResourceCategory, Semester } from '../types';
-import { 
-  BookOpen, 
-  Search, 
-  Filter, 
-  Upload, 
-  Download, 
-  Bookmark, 
-  Star, 
-  ShieldCheck, 
-  FileText, 
-  Eye, 
-  Sparkles, 
-  X, 
-  CheckCircle2, 
-  TrendingUp, 
+import {
+  BookOpen,
+  Search,
+  Filter,
+  Upload,
+  Download,
+  Bookmark,
+  Star,
+  ShieldCheck,
+  FileText,
+  Eye,
+  Sparkles,
+  X,
+  CheckCircle2,
+  TrendingUp,
   SlidersHorizontal,
   ChevronRight,
   Info
@@ -23,14 +23,14 @@ import {
 import { PYQ_TOPIC_TRENDS } from '../data/mockData';
 
 export const AcademicResourcesPage: React.FC = () => {
-  const { 
-    resources, 
-    addResource, 
-    toggleBookmarkResource, 
-    upvoteResource, 
-    downloadResource, 
+  const {
+    resources,
+    addResource,
+    toggleBookmarkResource,
+    upvoteResource,
+    downloadResource,
     currentUser,
-    showToast 
+    showToast
   } = useApp();
 
   // Active view tab: 'all-resources' | 'pyq-explorer' | 'bookmarked'
@@ -76,9 +76,9 @@ export const AcademicResourcesPage: React.FC = () => {
 
     // Search query
     const q = searchQuery.toLowerCase();
-    const matchesSearch = 
-      !q || 
-      res.title.toLowerCase().includes(q) || 
+    const matchesSearch =
+      !q ||
+      res.title.toLowerCase().includes(q) ||
       res.subject.toLowerCase().includes(q) ||
       res.tags.some(t => t.toLowerCase().includes(q));
 
@@ -175,32 +175,29 @@ export const AcademicResourcesPage: React.FC = () => {
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
         <button
           onClick={() => setActiveTab('all-resources')}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-            activeTab === 'all-resources'
+          className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${activeTab === 'all-resources'
               ? 'bg-brand-blue text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100'
-          }`}
+            }`}
         >
           All Resources ({resources.length})
         </button>
         <button
           onClick={() => setActiveTab('pyq-explorer')}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${
-            activeTab === 'pyq-explorer'
+          className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 ${activeTab === 'pyq-explorer'
               ? 'bg-brand-blue text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100'
-          }`}
+            }`}
         >
           <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
           <span>Smart PYQ Explorer</span>
         </button>
         <button
           onClick={() => setActiveTab('bookmarked')}
-          className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${
-            activeTab === 'bookmarked'
+          className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${activeTab === 'bookmarked'
               ? 'bg-brand-blue text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100'
-          }`}
+            }`}
         >
           My Bookmarks ({currentUser.bookmarkedResourceIds.length})
         </button>
@@ -208,7 +205,7 @@ export const AcademicResourcesPage: React.FC = () => {
 
       {/* SMART PYQ EXPLORER VIEW */}
       {activeTab === 'pyq-explorer' && (
-        <div className="bg-gradient-to-br from-blue-50/60 to-cyan-50/40 p-6 rounded-3xl border border-blue-200/80 space-y-6">
+        <div className="bg-gradient-to-br from-brand-tealLight/70 to-teal-50/40 p-6 rounded-3xl border border-brand-teal/25 space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-brand-blue flex items-center gap-1.5">
@@ -251,14 +248,13 @@ export const AcademicResourcesPage: React.FC = () => {
                 <div key={idx} className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs font-bold text-slate-900">{t.topic}</span>
-                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
-                      t.trend === 'critical' ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'
-                    }`}>
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${t.trend === 'critical' ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'
+                      }`}>
                       {t.frequencyPercent}% Frequency
                     </span>
                   </div>
                   <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className={`h-full rounded-full ${t.trend === 'critical' ? 'bg-rose-500' : 'bg-brand-blue'}`}
                       style={{ width: `${t.frequencyPercent}%` }}
                     />
@@ -288,7 +284,7 @@ export const AcademicResourcesPage: React.FC = () => {
               className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
             />
             {searchQuery && (
-              <button 
+              <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
               >
@@ -529,7 +525,7 @@ export const AcademicResourcesPage: React.FC = () => {
                 <div className="text-xs font-sans space-y-3 leading-relaxed text-slate-700">
                   <p><strong>Overview & Notes Summary:</strong></p>
                   <p>{previewResource.description}</p>
-                  
+
                   <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100 text-slate-800 font-sans my-4">
                     <p className="font-bold text-xs text-brand-blue mb-1">Key Examination Topics Covered:</p>
                     <ul className="list-disc list-inside text-xs space-y-1">
@@ -666,7 +662,7 @@ export const AcademicResourcesPage: React.FC = () => {
               {/* File Attachment Upload Simulation */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Attach PDF Document (Max 25MB)</label>
-                <div 
+                <div
                   onClick={() => setMockFileName('JECRC_Exam_Prep_Notes_2026.pdf')}
                   className="border-2 border-dashed border-slate-300 hover:border-brand-blue rounded-2xl p-4 text-center cursor-pointer transition-colors bg-slate-50/50"
                 >

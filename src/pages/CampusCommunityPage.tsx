@@ -231,9 +231,9 @@ export const CampusCommunityPage: React.FC = () => {
       {/* PEER MENTORSHIP TAB */}
       {activeTab === 'mentors' && (
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-6 rounded-3xl shadow-sm">
+          <div className="bg-gradient-to-r from-[#45B5A7] to-[#2E988B] text-white p-6 rounded-3xl shadow-card">
             <h2 className="text-xl font-extrabold">Connect with Senior JECRC Mentors</h2>
-            <p className="text-xs text-blue-100 mt-1 max-w-xl leading-relaxed">
+            <p className="text-xs text-teal-50 mt-1 max-w-xl leading-relaxed">
               Volunteer seniors and faculty advisors offering 1:1 guidance on DSA, placements, hackathons, and research.
             </p>
           </div>
@@ -254,7 +254,7 @@ export const CampusCommunityPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="p-3 bg-blue-50/60 rounded-2xl border border-blue-100 mb-4 text-xs font-semibold text-brand-blue">
+                  <div className="p-3 bg-brand-tealLight/60 rounded-2xl border border-brand-teal/20 mb-4 text-xs font-semibold text-brand-tealDark">
                     {mentor.achievement}
                   </div>
 

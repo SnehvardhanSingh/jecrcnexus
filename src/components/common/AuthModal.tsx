@@ -113,8 +113,8 @@ export const AuthModal: React.FC = () => {
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto flex-1">
           {/* Quick Demo Switch Banner */}
-          <div className="mb-5 p-3 rounded-xl bg-blue-50/70 border border-blue-200/60 text-xs text-blue-900 flex items-start gap-2.5">
-            <Sparkles className="w-4 h-4 text-brand-blue flex-shrink-0 mt-0.5" />
+          <div className="mb-5 p-3 rounded-xl bg-brand-tealLight/70 border border-brand-teal/20 text-xs text-brand-dark flex items-start gap-2.5">
+            <Sparkles className="w-4 h-4 text-brand-teal flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold text-brand-blue">Demonstration Student Profile</p>
               <p className="text-[11px] text-slate-600 mt-0.5">

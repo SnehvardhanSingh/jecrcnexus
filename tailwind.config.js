@@ -8,29 +8,39 @@ export default {
     extend: {
       colors: {
         brand: {
-          blue: '#1D4ED8',      // Primary Deep Blue
-          blueHover: '#1E40AF',
-          blueLight: '#EFF6FF',
-          cyan: '#06B6D4',      // Secondary Cyan
-          cyanHover: '#0891B2',
-          cyanLight: '#ECFEFF',
-          purple: '#8B5CF6',    // AI Accent Purple
-          purpleHover: '#7C3AED',
-          purpleLight: '#F5F3FF',
-          dark: '#0F172A',      // Main Text Dark Navy
-          slate: '#64748B',     // Supporting Slate Grey
-          bg: '#F8FAFC',        // Light grey background
+          teal: '#39B2A3',       // Primary Teal / Turquoise from reference
+          tealDark: '#2A9487',
+          tealLight: '#EAF8F6',
+          coral: '#F56A53',      // Coral Accent from reference
+          coralHover: '#E5563F',
+          coralLight: '#FFF1EE',
+          amber: '#F8C423',      // Warm Yellow Accent from reference
+          amberLight: '#FEF9E6',
+          blue: '#33A698',       // Harmonized primary accent mapped to teal
+          blueHover: '#288E82',
+          blueLight: '#EAF8F6',
+          cyan: '#49BFB0',       // Secondary Mint Teal
+          cyanHover: '#35A395',
+          cyanLight: '#ECFBF9',
+          purple: '#7C69EF',     // AI Accent Violet
+          purpleHover: '#6753DC',
+          purpleLight: '#F4F2FF',
+          dark: '#1A2332',       // Crisp Deep Slate/Navy Text
+          slate: '#6B7280',      // Supporting Muted Grey
+          bg: '#F4F6F9',         // Soft Light Grey Canvas
+          surface: '#F8FAFC',
           card: '#FFFFFF',
-          border: '#E2E8F0',
+          border: '#E8EDF3',
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       boxShadow: {
-        'subtle': '0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05)',
-        'card': '0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.05)',
-        'card-hover': '0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04)',
+        'subtle': '0 2px 8px -2px rgba(26, 35, 50, 0.05), 0 1px 3px -1px rgba(26, 35, 50, 0.03)',
+        'card': '0 10px 30px -10px rgba(26, 35, 50, 0.08), 0 2px 8px -2px rgba(26, 35, 50, 0.04)',
+        'card-hover': '0 18px 36px -12px rgba(26, 35, 50, 0.12), 0 6px 14px -4px rgba(26, 35, 50, 0.05)',
+        'pill': '0 8px 24px -6px rgba(26, 35, 50, 0.10), 0 2px 6px -2px rgba(26, 35, 50, 0.04)',
       }
     },
   },

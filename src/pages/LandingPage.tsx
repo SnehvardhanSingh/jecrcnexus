@@ -83,12 +83,12 @@ export const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-brand-bg text-brand-dark selection:bg-brand-blue/15">
       {/* Top Floating Announcement */}
-      <div className="bg-brand-blue text-white py-2 px-4 text-center text-xs font-medium">
+      <div className="bg-brand-teal text-white py-2 px-4 text-center text-xs font-medium">
         <span className="font-bold bg-white/20 px-2 py-0.5 rounded mr-2">New</span>
         Smart India Hackathon (SIH 2026) internal team recruitment is now live on JECRC Nexus!
         <button 
           onClick={() => setCurrentPage('projects')}
-          className="underline ml-2 font-bold hover:text-cyan-200"
+          className="underline ml-2 font-bold hover:text-brand-amberLight"
         >
           View Listings →
         </button>
@@ -103,8 +103,8 @@ export const LandingPage: React.FC = () => {
             <BrandLogo size="lg" showTagline={true} />
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-brand-blue text-xs font-semibold mb-6">
-            <Sparkles className="w-3.5 h-3.5 text-brand-purple" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-tealLight border border-brand-teal/25 text-brand-tealDark text-xs font-semibold mb-6">
+            <Sparkles className="w-3.5 h-3.5 text-brand-coral" />
             <span>AI-Powered Academic & Engineering Community</span>
           </div>
 

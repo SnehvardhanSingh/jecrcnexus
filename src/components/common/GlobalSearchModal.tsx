@@ -162,7 +162,7 @@ export const GlobalSearchModal: React.FC = () => {
                     <button
                       key={item}
                       onClick={() => setQuery(item)}
-                      className="px-2.5 py-1 text-xs bg-slate-50 hover:bg-blue-50 hover:text-brand-blue border border-slate-200 rounded-lg text-slate-600 transition-colors"
+                      className="px-2.5 py-1 text-xs bg-slate-50 hover:bg-brand-tealLight hover:text-brand-tealDark border border-slate-200 rounded-lg text-slate-600 transition-colors"
                     >
                       {item}
                     </button>
@@ -177,24 +177,24 @@ export const GlobalSearchModal: React.FC = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <button
                     onClick={() => handleSelect('resources')}
-                    className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 hover:border-brand-blue/30 hover:bg-blue-50/30 transition-all text-left text-xs font-medium text-slate-700"
+                    className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 hover:border-brand-teal/30 hover:bg-brand-tealLight/40 transition-all text-left text-xs font-medium text-slate-700"
                   >
-                    <BookOpen className="w-4 h-4 text-brand-blue" />
+                    <BookOpen className="w-4 h-4 text-brand-teal" />
                     Browse PYQ Papers
                   </button>
                   <button
-                    onClick={() => handleSelect('dsa')}
-                    className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 hover:border-brand-blue/30 hover:bg-blue-50/30 transition-all text-left text-xs font-medium text-slate-700"
+                    onClick={() => handleSelect('courses')}
+                    className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 hover:border-brand-teal/30 hover:bg-brand-tealLight/40 transition-all text-left text-xs font-medium text-slate-700"
                   >
                     <Code2 className="w-4 h-4 text-emerald-600" />
-                    Practice Coding
+                    Courses & Subjects
                   </button>
                   <button
-                    onClick={() => handleSelect('ai-assistant')}
-                    className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 hover:border-brand-purple/30 hover:bg-purple-50/30 transition-all text-left text-xs font-medium text-slate-700"
+                    onClick={() => handleSelect('mentors')}
+                    className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 hover:border-brand-coral/30 hover:bg-brand-coralLight/40 transition-all text-left text-xs font-medium text-slate-700"
                   >
-                    <Sparkles className="w-4 h-4 text-brand-purple" />
-                    Ask AI Assistant
+                    <Users className="w-4 h-4 text-brand-coral" />
+                    Faculty & Mentors
                   </button>
                 </div>
               </div>
