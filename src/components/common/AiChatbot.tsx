@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { streamAiResponse } from '../../utils/aiStream';
 import {
   MessageCircle,
   X,
@@ -71,6 +72,7 @@ export const AiChatbot: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<{ role: string; text: string }[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -94,58 +96,73 @@ export const AiChatbot: React.FC = () => {
     'How to join a study group?',
   ];
 
+  const isBusy = isLoading || isStreaming;
+
   const handleSend = async (textOverride?: string) => {
     const text = textOverride || inputText;
-    if (!text.trim() || isLoading) return;
+    if (!text.trim() || isBusy) return;
 
+    const trimmed = text.trim();
     const userMsg: ChatMessage = {
       id: `u_${Date.now()}`,
       sender: 'user',
-      text: text.trim(),
+      text: trimmed,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
+    const botMsgId = `b_${Date.now() + 1}`;
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setIsLoading(true);
+    setIsStreaming(true);
 
-    const newHistory = [...conversationHistory, { role: 'user', text: text.trim() }];
+    const newHistory = [...conversationHistory, { role: 'user', text: trimmed }];
+    let hasReceivedFirstChunk = false;
 
     try {
-      const response = await fetch('/api/ai-chatbot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text.trim(), history: conversationHistory }),
+      const replyText = await streamAiResponse({
+        endpoint: '/api/ai-chatbot',
+        message: trimmed,
+        history: conversationHistory,
+        onChunk: (fullSoFar) => {
+          if (!hasReceivedFirstChunk) {
+            hasReceivedFirstChunk = true;
+            setIsLoading(false);
+            setMessages(prev => [
+              ...prev,
+              {
+                id: botMsgId,
+                sender: 'bot',
+                text: fullSoFar,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              },
+            ]);
+          } else {
+            setMessages(prev =>
+              prev.map(m => (m.id === botMsgId ? { ...m, text: fullSoFar } : m))
+            );
+          }
+        },
       });
 
-      const data = await response.json().catch(() => null);
-      if (!response.ok || !data?.success) {
-        throw new Error(
-          data?.error ||
-            (response.status >= 500
-              ? 'Unable to reach the AI server. Please make sure the backend server is running and try again.'
-              : 'Failed to get a response from NexBot.')
-        );
-      }
-
-      const botMsg: ChatMessage = {
-        id: `b_${Date.now()}`,
-        sender: 'bot',
-        text: data.reply,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setMessages(prev => [...prev, botMsg]);
-      setConversationHistory([...newHistory, { role: 'assistant', text: data.reply }]);
+      setConversationHistory([...newHistory, { role: 'assistant', text: replyText }]);
     } catch (error) {
       const errText = error instanceof Error ? error.message : 'An unexpected error occurred';
-      setMessages(prev => [...prev, {
-        id: `e_${Date.now()}`,
-        sender: 'bot',
-        text: `⚠️ ${errText}. Please try again.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isError: true,
-      }]);
+      setMessages(prev => {
+        const filtered = prev.filter(m => m.id !== botMsgId);
+        return [
+          ...filtered,
+          {
+            id: `e_${Date.now()}`,
+            sender: 'bot',
+            text: `⚠️ ${errText}`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isError: true,
+          },
+        ];
+      });
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
     }
   };
 
@@ -233,7 +250,7 @@ export const AiChatbot: React.FC = () => {
             </div>
             <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center gap-1.5">
               <Loader2 className="w-3 h-3 animate-spin text-brand-teal" />
-              <span className="text-[10px] text-slate-400">NexBot is typing...</span>
+              <span className="text-[10px] text-slate-400">Nexus AI is thinking...</span>
             </div>
           </div>
         )}
@@ -242,7 +259,7 @@ export const AiChatbot: React.FC = () => {
       </div>
 
       {/* Quick questions (shown when few messages) */}
-      {messages.length <= 2 && !isLoading && (
+      {messages.length <= 2 && !isBusy && (
         <div className="px-3 pb-2 flex flex-wrap gap-1.5 bg-slate-50/50">
           {quickQuestions.map((q, i) => (
             <button
@@ -264,12 +281,12 @@ export const AiChatbot: React.FC = () => {
             placeholder="Ask NexBot anything..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            disabled={isLoading}
+            disabled={isBusy}
             className="flex-1 bg-slate-100 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-teal-500/20 focus:bg-white transition-all disabled:opacity-50 border border-transparent focus:border-teal-300"
           />
           <button
             type="submit"
-            disabled={!inputText.trim() || isLoading}
+            disabled={!inputText.trim() || isBusy}
             className="p-2 bg-brand-teal hover:bg-teal-600 disabled:opacity-40 text-white rounded-xl transition-colors"
           >
             <Send className="w-3.5 h-3.5" />

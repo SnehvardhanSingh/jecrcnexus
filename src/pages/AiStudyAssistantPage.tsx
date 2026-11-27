@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { streamAiResponse } from '../utils/aiStream';
 import {
   Sparkles,
   Send,
@@ -137,6 +138,7 @@ export const AiStudyAssistantPage: React.FC = () => {
 
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -152,6 +154,8 @@ export const AiStudyAssistantPage: React.FC = () => {
       timestamp: '—',
     },
   ]);
+
+  const isBusy = isTyping || isStreaming;
 
   // Auto-scroll
   useEffect(() => {
@@ -169,86 +173,97 @@ export const AiStudyAssistantPage: React.FC = () => {
 
   const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend || inputText;
-    if (!text.trim() || isTyping) return;
+    if (!text.trim() || isBusy) return;
 
+    const trimmed = text.trim();
     const userMsg: ChatMessage = {
       id: `u_${Date.now()}`,
       sender: 'user',
-      text: text.trim(),
+      text: trimmed,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
+    const botMsgId = `b_${Date.now() + 1}`;
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setIsTyping(true);
+    setIsStreaming(true);
 
-    // Update conversation history for API context
-    const newHistory = [...conversationHistory, { role: 'user', text: text.trim() }];
+    const newHistory = [...conversationHistory, { role: 'user', text: trimmed }];
+    let hasReceivedFirstChunk = false;
 
     try {
-      const response = await fetch('/api/ai-study-assistant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text.trim(),
-          history: conversationHistory,
-        }),
+      const replyText = await streamAiResponse({
+        endpoint: '/api/ai-study-assistant',
+        message: trimmed,
+        history: conversationHistory,
+        onChunk: (fullSoFar) => {
+          // Hide raw JSON block while streaming interactive quiz/flashcards
+          const visibleText = fullSoFar.includes('```json')
+            ? fullSoFar.split('```json')[0].trim() || 'Preparing interactive study material...'
+            : fullSoFar;
+
+          if (!hasReceivedFirstChunk) {
+            hasReceivedFirstChunk = true;
+            setIsTyping(false);
+            setMessages(prev => [
+              ...prev,
+              {
+                id: botMsgId,
+                sender: 'assistant',
+                text: visibleText,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              },
+            ]);
+          } else {
+            setMessages(prev =>
+              prev.map(m => (m.id === botMsgId ? { ...m, text: visibleText } : m))
+            );
+          }
+        },
       });
 
-      const data = await response.json().catch(() => null);
+      // Parse quiz or flashcards once streaming finishes
+      const lower = trimmed.toLowerCase();
+      const quizData = lower.includes('quiz') ? parseQuizFromResponse(replyText) : undefined;
+      const flashcardData = lower.includes('flashcard') ? parseFlashcardsFromResponse(replyText) : undefined;
 
-      if (!response.ok || !data?.success) {
-        throw new Error(
-          data?.error ||
-            (response.status >= 500
-              ? 'Unable to reach the AI server. Please make sure the backend server is running and try again.'
-              : 'Failed to get a response from the AI Study Assistant.')
-        );
-      }
+      const finalText =
+        quizData || flashcardData
+          ? replyText.replace(/```json\s*[\s\S]*?```/g, '').trim()
+          : replyText;
 
-      const replyText = data.reply;
-
-      // Try to parse quiz or flashcards from the response
-      const lower = text.toLowerCase();
-      let quizData = undefined;
-      let flashcardData = undefined;
-
-      if (lower.includes('quiz')) {
-        quizData = parseQuizFromResponse(replyText);
-      }
-      if (lower.includes('flashcard')) {
-        flashcardData = parseFlashcardsFromResponse(replyText);
-      }
-
-      // Remove JSON block from displayed text if structured data was extracted
-      let displayText = replyText;
-      if (quizData || flashcardData) {
-        displayText = replyText.replace(/```json\s*[\s\S]*?```/g, '').trim();
-      }
-
-      const botMsg: ChatMessage = {
-        id: `b_${Date.now()}`,
-        sender: 'assistant',
-        text: displayText,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        quiz: quizData ?? undefined,
-        flashcards: flashcardData ?? undefined,
-      };
-
-      setMessages(prev => [...prev, botMsg]);
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === botMsgId
+            ? {
+              ...m,
+              text: finalText,
+              quiz: quizData ?? undefined,
+              flashcards: flashcardData ?? undefined,
+            }
+            : m
+        )
+      );
       setConversationHistory([...newHistory, { role: 'assistant', text: replyText }]);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      const errorMsg: ChatMessage = {
-        id: `e_${Date.now()}`,
-        sender: 'assistant',
-        text: `⚠️ **Error:** ${errorMessage}\n\nPlease try again or check that the API server is running.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isError: true,
-      };
-      setMessages(prev => [...prev, errorMsg]);
+      setMessages(prev => {
+        const filtered = prev.filter(m => m.id !== botMsgId);
+        return [
+          ...filtered,
+          {
+            id: `e_${Date.now()}`,
+            sender: 'assistant',
+            text: `⚠️ **Error:** ${errorMessage}\n\nPlease try again in a moment.`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isError: true,
+          },
+        ];
+      });
     } finally {
       setIsTyping(false);
+      setIsStreaming(false);
     }
   };
 
@@ -303,7 +318,7 @@ export const AiStudyAssistantPage: React.FC = () => {
           <button
             key={idx}
             onClick={() => handleSendMessage(p.prompt)}
-            disabled={isTyping}
+            disabled={isBusy}
             className="p-3 bg-white hover:bg-teal-50/60 border border-slate-200 hover:border-teal-300 rounded-2xl text-left transition-all shadow-2xs flex flex-col justify-between group disabled:opacity-50"
           >
             <div className="flex items-center gap-1.5 mb-1">
@@ -326,10 +341,10 @@ export const AiStudyAssistantPage: React.FC = () => {
             >
               <div
                 className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 shadow-2xs ${msg.sender === 'user'
-                    ? 'bg-brand-teal text-white'
-                    : msg.isError
-                      ? 'bg-rose-100 text-rose-700 border border-rose-200'
-                      : 'bg-teal-100 text-teal-700 border border-teal-200'
+                  ? 'bg-brand-teal text-white'
+                  : msg.isError
+                    ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                    : 'bg-teal-100 text-teal-700 border border-teal-200'
                   }`}
               >
                 {msg.sender === 'user' ? <User className="w-4 h-4" /> : msg.isError ? <AlertCircle className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
@@ -338,10 +353,10 @@ export const AiStudyAssistantPage: React.FC = () => {
               <div className={`max-w-[85%] sm:max-w-[75%] space-y-2 ${msg.sender === 'user' ? 'items-end' : ''}`}>
                 <div
                   className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${msg.sender === 'user'
-                      ? 'bg-brand-teal text-white rounded-tr-xs shadow-xs'
-                      : msg.isError
-                        ? 'bg-rose-50 border border-rose-200 text-rose-800 rounded-tl-xs'
-                        : 'bg-slate-50 border border-slate-200/90 text-slate-800 rounded-tl-xs'
+                    ? 'bg-brand-teal text-white rounded-tr-xs shadow-xs'
+                    : msg.isError
+                      ? 'bg-rose-50 border border-rose-200 text-rose-800 rounded-tl-xs'
+                      : 'bg-slate-50 border border-slate-200/90 text-slate-800 rounded-tl-xs'
                     }`}
                 >
                   {msg.sender === 'assistant' ? renderMarkdown(msg.text) : msg.text}
@@ -371,12 +386,12 @@ export const AiStudyAssistantPage: React.FC = () => {
                                     onClick={() => setUserAnswers(prev => ({ ...prev, [key]: oIdx }))}
                                     disabled={isAnswered}
                                     className={`w-full p-2 text-left text-xs rounded-lg border transition-colors flex items-center justify-between ${isThisSelected
-                                        ? oIdx === q.correctIndex
-                                          ? 'bg-emerald-50 border-emerald-400 text-emerald-800 font-bold'
-                                          : 'bg-rose-50 border-rose-400 text-rose-800'
-                                        : isAnswered && oIdx === q.correctIndex
-                                          ? 'bg-emerald-50/50 border-emerald-300 text-emerald-700'
-                                          : 'bg-slate-50/50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                                      ? oIdx === q.correctIndex
+                                        ? 'bg-emerald-50 border-emerald-400 text-emerald-800 font-bold'
+                                        : 'bg-rose-50 border-rose-400 text-rose-800'
+                                      : isAnswered && oIdx === q.correctIndex
+                                        ? 'bg-emerald-50/50 border-emerald-300 text-emerald-700'
+                                        : 'bg-slate-50/50 hover:bg-slate-100 border-slate-200 text-slate-700'
                                       }`}
                                   >
                                     <span>{opt}</span>
@@ -416,8 +431,8 @@ export const AiStudyAssistantPage: React.FC = () => {
                               key={fIdx}
                               onClick={() => setFlippedCards(prev => ({ ...prev, [key]: !prev[key] }))}
                               className={`p-4 rounded-xl border cursor-pointer min-h-[140px] flex flex-col justify-between transition-all duration-300 shadow-2xs ${isFlipped
-                                  ? 'bg-teal-600 text-white border-teal-700'
-                                  : 'bg-white hover:border-teal-300 text-slate-800 border-slate-200'
+                                ? 'bg-teal-600 text-white border-teal-700'
+                                : 'bg-white hover:border-teal-300 text-slate-800 border-slate-200'
                                 }`}
                             >
                               <div className="flex items-center justify-between text-[10px] uppercase font-bold opacity-75">
@@ -461,7 +476,7 @@ export const AiStudyAssistantPage: React.FC = () => {
               </div>
               <div className="p-3 px-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-500 flex items-center gap-2">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-teal" />
-                <span>Gemini AI is thinking...</span>
+                <span>Nexus AI is thinking...</span>
               </div>
             </div>
           )}
@@ -483,7 +498,7 @@ export const AiStudyAssistantPage: React.FC = () => {
               placeholder="Ask anything about JECRC curriculum, formulas, doubts, or coding..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              disabled={isTyping}
+              disabled={isBusy}
               className="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 disabled:opacity-50"
             />
 
@@ -498,7 +513,7 @@ export const AiStudyAssistantPage: React.FC = () => {
 
             <button
               type="submit"
-              disabled={!inputText.trim() || isTyping}
+              disabled={!inputText.trim() || isBusy}
               className="p-2.5 bg-brand-teal hover:bg-teal-600 disabled:opacity-40 text-white rounded-xl shadow-xs transition-colors"
             >
               <Send className="w-4 h-4" />

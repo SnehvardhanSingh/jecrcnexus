@@ -1,7 +1,10 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export const PRIMARY_MODEL = 'gemini-3.8-flash';
+// gemini-3.5-flash-lite is ~8x faster (~1.4s TTFT) and avoids 3.8-flash 503 overload spikes
+export const PRIMARY_MODEL = 'gemini-3.5-flash-lite';
 export const FALLBACK_MODEL = 'gemini-flash-latest';
+
+const MAX_HISTORY_MESSAGES = 12;
 
 export const STUDY_ASSISTANT_SYSTEM = `You are **JECRC Nexus AI Study Assistant**, an intelligent academic copilot built for JECRC University engineering students.
 
@@ -25,8 +28,6 @@ You help students with:
 • **Student support**: Scholarships, anti-ragging, mentorship, counselling, placement cell, training & internship cell.
 
 Tone: Friendly, helpful, and concise. Always greet warmly and guide step by step. If you don't know something specific, politely say so and suggest contacting the relevant department.`;
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Converts raw Gemini SDK / HTTP errors into clean, user-friendly messages and HTTP status codes.
@@ -56,7 +57,7 @@ export function formatGeminiError(error) {
   if (status === 503 || /high demand|unavailable|overloaded/i.test(raw)) {
     return {
       status: 503,
-      message: 'Gemini AI is currently experiencing high demand. Please try again in a few seconds.',
+      message: 'Nexus AI is currently experiencing high demand. Please try again in a few seconds.',
     };
   }
   if (status === 400) {
@@ -67,20 +68,15 @@ export function formatGeminiError(error) {
   }
   return {
     status: 500,
-    message: 'Something went wrong while contacting Gemini AI. Please try again.',
+    message: 'Something went wrong while contacting Nexus AI. Please try again.',
   };
 }
 
-/**
- * Generates a Gemini response using PRIMARY_MODEL (gemini-3.8-flash),
- * retrying briefly or falling back to FALLBACK_MODEL (gemini-flash-latest) on transient 503/429 spikes.
- */
-export async function generateGeminiReply({ apiKey, systemPrompt, history, message }) {
-  const genAI = new GoogleGenerativeAI(apiKey);
-
+function buildContents(history, message) {
   const contents = [];
   if (Array.isArray(history)) {
-    for (const msg of history) {
+    const recent = history.slice(-MAX_HISTORY_MESSAGES);
+    for (const msg of recent) {
       if (msg && typeof msg.text === 'string' && msg.text.trim()) {
         contents.push({
           role: msg.role === 'user' ? 'user' : 'model',
@@ -90,33 +86,135 @@ export async function generateGeminiReply({ apiKey, systemPrompt, history, messa
     }
   }
   contents.push({ role: 'user', parts: [{ text: message }] });
+  return contents;
+}
 
-  const attempts = [
-    { model: PRIMARY_MODEL, delayMs: 0 },
-    { model: PRIMARY_MODEL, delayMs: 800 },
-    { model: FALLBACK_MODEL, delayMs: 0 },
-  ];
+/**
+ * Non-streaming Gemini response with automatic fallback on transient 503/429/404.
+ */
+export async function generateGeminiReply({ apiKey, systemPrompt, history, message }) {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const contents = buildContents(history, message);
+  const modelsToTry = [PRIMARY_MODEL, FALLBACK_MODEL];
 
   let lastError;
-  for (const attempt of attempts) {
-    if (attempt.delayMs > 0) await sleep(attempt.delayMs);
+  for (const modelName of modelsToTry) {
     try {
       const model = genAI.getGenerativeModel({
-        model: attempt.model,
+        model: modelName,
         systemInstruction: systemPrompt,
       });
       const result = await model.generateContent({ contents });
-      return { text: result.response.text(), model: attempt.model };
+      return { text: result.response.text(), model: modelName };
     } catch (error) {
       lastError = error;
       const status = error?.status;
-      const isTransient = status === 503 || status === 429;
-      if (!isTransient) {
+      const shouldFallback = status === 503 || status === 429 || status === 404;
+      if (!shouldFallback || modelName === FALLBACK_MODEL) {
         throw error;
       }
-      console.warn(`⚠️  ${attempt.model} returned ${status}; trying next fallback...`);
+      console.warn(`⚠️  ${modelName} returned ${status}; falling back to ${FALLBACK_MODEL}...`);
     }
   }
 
   throw lastError;
+}
+
+/**
+ * Streams Gemini response chunks progressively via onChunk(text).
+ * Falls back to FALLBACK_MODEL if PRIMARY_MODEL fails before streaming starts.
+ */
+export async function streamGeminiReply({ apiKey, systemPrompt, history, message, onChunk }) {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const contents = buildContents(history, message);
+  const modelsToTry = [PRIMARY_MODEL, FALLBACK_MODEL];
+
+  let lastError;
+  for (const modelName of modelsToTry) {
+    let emittedAny = false;
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        systemInstruction: systemPrompt,
+      });
+      const result = await model.generateContentStream({ contents });
+      let fullText = '';
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
+        if (chunkText) {
+          emittedAny = true;
+          fullText += chunkText;
+          onChunk(chunkText);
+        }
+      }
+      return { text: fullText, model: modelName };
+    } catch (error) {
+      lastError = error;
+      const status = error?.status;
+      const shouldFallback = !emittedAny && (status === 503 || status === 429 || status === 404);
+      if (!shouldFallback || modelName === FALLBACK_MODEL) {
+        throw error;
+      }
+      console.warn(`⚠️  ${modelName} stream failed (${status}); falling back to ${FALLBACK_MODEL}...`);
+    }
+  }
+
+  throw lastError;
+}
+
+/**
+ * Shared HTTP handler for both Express (local) and Vercel serverless functions.
+ * Supports SSE streaming when req.body.stream === true, and JSON otherwise.
+ */
+export async function handleAiHttpRequest(req, res, systemPrompt) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ success: false, error: 'GEMINI_API_KEY is not configured on the server.' });
+  }
+
+  const { message, history, stream } = req.body || {};
+  if (!message || typeof message !== 'string' || !message.trim()) {
+    return res.status(400).json({ success: false, error: 'message is required' });
+  }
+
+  if (stream) {
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    if (typeof res.flushHeaders === 'function') res.flushHeaders();
+
+    try {
+      const { model } = await streamGeminiReply({
+        apiKey,
+        systemPrompt,
+        history,
+        message: message.trim(),
+        onChunk: (chunk) => {
+          res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+        },
+      });
+      res.write(`data: ${JSON.stringify({ done: true, model })}\n\n`);
+      res.end();
+    } catch (error) {
+      console.error('Gemini streaming error:', error);
+      const { message: errMsg } = formatGeminiError(error);
+      res.write(`data: ${JSON.stringify({ error: errMsg })}\n\n`);
+      res.end();
+    }
+    return;
+  }
+
+  try {
+    const { text, model } = await generateGeminiReply({
+      apiKey,
+      systemPrompt,
+      history,
+      message: message.trim(),
+    });
+    res.json({ success: true, reply: text, model });
+  } catch (error) {
+    console.error('Gemini API error:', error);
+    const { status, message: errMsg } = formatGeminiError(error);
+    res.status(status).json({ success: false, error: errMsg });
+  }
 }
